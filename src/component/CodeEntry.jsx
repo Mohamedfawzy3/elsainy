@@ -23,7 +23,7 @@ const phone = location.state.phone;
     try {
       
       const response = await axios.post(
-        '/api/ValidatePhoneNumber/Verify OTP', 
+        'https://prototype.runasp.net/api/ValidatePhoneNumber/Verify OTP', 
         {
           phone,
           otp: parseInt(otp, 10), 

@@ -15,7 +15,7 @@ const Success = () => {
     const fetchUserData = async () => {
       try {
         const response = await axios.get(
-          '/api/ValidatePhoneNumber/Get User Data'
+          'https://prototype.runasp.net/api/ValidatePhoneNumber/Get User Data'
         
         
         );
