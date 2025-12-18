@@ -13,7 +13,7 @@ function App() {
   <>
   
     <Router>
-      <div className="container mt-5">
+      <div className="container">
         <Routes>
           <Route path="/" element={<PhoneEntry />} />
           <Route path="/code" element={<CodeEntry />} />
