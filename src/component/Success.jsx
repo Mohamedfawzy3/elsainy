@@ -19,7 +19,7 @@ const Success = () => {
     const fetchUserData = async () => {
       try {
         const response = await axios.get(
-          'https://prototype.runasp.net/api/ValidatePhoneNumber/Get User Data'
+          'https://prototype.runasp.net/api/ValidatePhoneNumber/GetUserData'
         );
 
         if (response.data?.userData) {

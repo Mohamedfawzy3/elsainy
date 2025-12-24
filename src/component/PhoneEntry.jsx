@@ -27,7 +27,7 @@ const PhoneEntry = () => {
 
     try {
       await axios.post(
-        'https://prototype.runasp.net/api/ValidatePhoneNumber/Add phone',
+        'https://prototype.runasp.net/api/ValidatePhoneNumber/AddPhone',
         { phone },
         { headers: { 'Content-Type': 'application/json' } }
       );

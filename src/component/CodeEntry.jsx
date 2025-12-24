@@ -68,7 +68,7 @@ const CodeEntry = () => {
 
     try {
       await axios.post(
-        'https://prototype.runasp.net/api/ValidatePhoneNumber/Verify OTP',
+        'https://prototype.runasp.net/api/ValidatePhoneNumber/VerifyOTP',
         {
           phone,
           otp: parseInt(code, 10),
