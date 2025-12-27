@@ -117,7 +117,13 @@ const CodeEntry = () => {
           transition: all 0.3s ease;
           background: #f8f9ff;
         }
+          @media screen and (max-width: 768px) {
         
+          .otp-input {
+             width: 45px;
+          height: 55px;
+          }
+        }
         .otp-input:focus {
           border-color: #007bff;
           box-shadow: 0 0 0 5px rgba(0, 123, 255, 0.15);
