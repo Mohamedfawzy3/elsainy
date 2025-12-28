@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import * as signalR from '@microsoft/signalr';
 import { useLocation } from 'react-router-dom';
 
 const Success = () => {
@@ -16,25 +17,54 @@ const Success = () => {
       return;
     }
 
-    const fetchUserData = async () => {
-      try {
-        const response = await axios.get(
-          'https://prototype.runasp.net/api/ValidatePhoneNumber/GetUserData'
-        );
+    let connection = null;
+    const handleData = (data) => {
+      const payload = data?.userData ? data.userData : data;
+      if (!payload) return;
+      const { colorCode, code } = payload;
+      if (colorCode) setColor(colorCode);
+      if (code) setCode(code);
+      setLoading(false);
+    };
 
-        if (response.data?.userData) {
-          const { colorCode, code } = response.data.userData;
-          if (colorCode) setColor(colorCode);
-          if (code) setCode(code);
-        }
+    const startConnection = async () => {
+      try {
+        connection = new signalR.HubConnectionBuilder()
+          .withUrl(`https://prototype.runasp.net/api/userData?phone=${phone}`)
+          .withAutomaticReconnect()
+          .build();
+
+        // Listen for several possible event names (server may use different names)
+        connection.on('UserDataUpdated', handleData);
+        connection.on('UserVerified', handleData);
+        connection.on('ReceiveUserData', handleData);
+        connection.on('userData', handleData);
+        connection.on('message', handleData);
+
+        await connection.start();
       } catch (err) {
-        console.error('Failed to fetch user data', err);
-      } finally {
+        console.error('SignalR connection failed:', err);
         setLoading(false);
       }
     };
 
-    fetchUserData();
+    // start SignalR and also attempt an initial GET as a fallback
+    startConnection();
+
+    axios
+      .get('https://prototype.runasp.net/api/userData', { params: { phone } })
+      .then((response) => {
+        if (response.data) handleData(response.data);
+      })
+      .catch((err) => {
+        // ignore, SignalR will handle realtime updates
+      });
+
+    return () => {
+      if (connection) {
+        connection.stop().catch(() => {});
+      }
+    };
   }, [phone]);
 
   const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
