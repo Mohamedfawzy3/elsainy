@@ -26,7 +26,7 @@ useEffect(() => {
 
   // ✅ LISTEN TO ALL USERS (NO PHONE)
   const connection = new signalR.HubConnectionBuilder()
-    .withUrl('https://prototype.runasp.net/api/userData')
+    .withUrl('https://prototype.runasp.net/userData')
     .configureLogging(signalR.LogLevel.Information)
     .withAutomaticReconnect()
     .build();
