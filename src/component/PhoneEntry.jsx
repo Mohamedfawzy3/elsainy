@@ -32,12 +32,12 @@ const PhoneEntry = () => {
         { headers: { 'Content-Type': 'application/json' } }
       );
 
-      setSuccess('تم إرسال البيانات، جارٍ انتظار التحقق من الجهاز الآخر...');
+      setSuccess('تم إرسال رمز التحقق بنجاح!');
       setTimeout(() => {
-        navigate('/success', { state: { phone } });
-      }, 1000);
+        navigate('/code', { state: { phone } });
+      }, 2000);
     } catch (err) {
-      setError(err.response?.data?.message || 'فشل في إرسال البيانات');
+      setError(err.response?.data?.message || 'فشل في إرسال رمز التحقق');
       setIsValid(false);
     } finally {
       setLoading(false);

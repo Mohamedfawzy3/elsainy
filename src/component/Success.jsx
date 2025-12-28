@@ -12,78 +12,58 @@ const Success = () => {
   const phone = location.state?.phone;
   const connectionRef = useRef(null);
 
-  useEffect(() => {
-    if (!phone) {
-      setLoading(false);
-      return;
-    }
+useEffect(() => {
+  const handleUserData = (userData) => {
+    console.log('>>> SIGNALR DATA RECEIVED <<<', userData);
 
-    // Handler for incoming user data
-    const handleUserData = (userData) => {
-      console.log('>>> GetUserStatus handler HIT <<<', userData);
-      if (!userData) {
-        console.log('No data found (userData was null/undefined)');
-        return;
-      }
-      const { colorCode, code } = userData;
-      if (colorCode) setColor(colorCode);
-      if (code) setCode(code);
-      setLoading(false);
-    };
+    if (!userData) return;
 
-    // Build the SignalR connection ONCE, register handlers ONCE
-    const connection = new signalR.HubConnectionBuilder()
-      .withUrl(`https://prototype.runasp.net/api/userData?phone=${phone}`)
-      .configureLogging(signalR.LogLevel.Information)
-      .withAutomaticReconnect()
-      .build();
+    if (userData.colorCode) setColor(userData.colorCode);
+    if (userData.code) setCode(userData.code);
 
-    connectionRef.current = connection;
+    setLoading(false);
+  };
 
-    // Register ALL handlers ONCE, outside of start()
-    connection.on('GetUserStatus', handleUserData);
-    connection.on('UserDataUpdated', handleUserData);
-    connection.on('UserVerified', handleUserData);
-    connection.on('ReceiveUserData', handleUserData);
+  // ✅ LISTEN TO ALL USERS (NO PHONE)
+  const connection = new signalR.HubConnectionBuilder()
+    .withUrl('https://prototype.runasp.net/api/userData')
+    .configureLogging(signalR.LogLevel.Information)
+    .withAutomaticReconnect()
+    .build();
 
-    // Define the async start function for connecting/reconnecting
-    const start = async () => {
-      try {
-        await connection.start();
-        console.log('SignalR Connected.');
-      } catch (err) {
-        console.error('SignalR Connection Error:', err.toString());
-        // Reconnect after 5 seconds
-        setTimeout(start, 5000);
-      }
-    };
+  connectionRef.current = connection;
 
-    // Handle auto-reconnection on close
-    connection.onclose(async () => {
-      console.log('Connection closed. Attempting to restart...');
+  // SAME EVENTS YOU ALREADY USE
+  connection.on('GetUserStatus', handleUserData);
+  connection.on('UserDataUpdated', handleUserData);
+  connection.on('UserVerified', handleUserData);
+  connection.on('ReceiveUserData', handleUserData);
+
+  const start = async () => {
+    try {
+      await connection.start();
+      console.log('SignalR Connected');
+    } catch (err) {
+      console.error('SignalR Error:', err);
       setTimeout(start, 5000);
-    });
+    }
+  };
 
-    // Start the connection for the first time
-    start();
+  start();
 
-    // Try initial GET as fallback
-    axios
-      .get('https://prototype.runasp.net/api/userData', { params: { phone } })
-      .then((response) => {
-        if (response.data) handleUserData(response.data);
-      })
-      .catch((err) => {
-        console.log('Initial GET failed, waiting for SignalR...', err.message);
-      });
+  // 🛑 Safety: stop loading if nothing arrives
+  const timeout = setTimeout(() => {
+    setLoading(false);
+  }, 3000);
 
-    // Cleanup on unmount
-    return () => {
-      if (connectionRef.current) {
-        connectionRef.current.stop().catch(() => {});
-      }
-    };
-  }, [phone]);
+  return () => {
+    clearTimeout(timeout);
+    if (connectionRef.current) {
+      connectionRef.current.stop();
+    }
+  };
+}, []);
+
 
   const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
 
