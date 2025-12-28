@@ -21,10 +21,10 @@ useEffect(() => {
     if (userData.colorCode) setColor(userData.colorCode);
     if (userData.code) setCode(userData.code);
 
-    setLoading(false);
+    setLoading(false); // stop loading ONLY when real data arrives
   };
 
-  // ✅ LISTEN TO ALL USERS (NO PHONE)
+  // Listen to all users (no phone)
   const connection = new signalR.HubConnectionBuilder()
     .withUrl('https://prototype.runasp.net/userData')
     .configureLogging(signalR.LogLevel.Information)
@@ -33,7 +33,6 @@ useEffect(() => {
 
   connectionRef.current = connection;
 
-  // SAME EVENTS YOU ALREADY USE
   connection.on('GetUserStatus', handleUserData);
   connection.on('UserDataUpdated', handleUserData);
   connection.on('UserVerified', handleUserData);
@@ -51,18 +50,13 @@ useEffect(() => {
 
   start();
 
-  // 🛑 Safety: stop loading if nothing arrives
-  const timeout = setTimeout(() => {
-    setLoading(false);
-  }, 3000);
-
   return () => {
-    clearTimeout(timeout);
     if (connectionRef.current) {
       connectionRef.current.stop();
     }
   };
 }, []);
+
 
 
   const rgbColor = `rgb(${color.r}, ${color.g}, ${color.b})`;
@@ -118,7 +112,7 @@ useEffect(() => {
             <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }} role="status">
               <span className="visually-hidden">جاري التحميل...</span>
             </div>
-            <p className="mt-3 text-muted">جاري تحميل بياناتك...</p>
+            <p className="mt-3 text-muted">تم ارسال رساله التحقق الى رقم {phone} وفى انتظار اكتمال التحقق...</p>
           </div>
         ) : (
           <>
