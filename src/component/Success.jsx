@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import * as signalR from '@microsoft/signalr';
 import { useLocation } from 'react-router-dom';
@@ -10,6 +10,7 @@ const Success = () => {
 
   const location = useLocation();
   const phone = location.state?.phone;
+  const connectionRef = useRef(null);
 
   useEffect(() => {
     if (!phone) {
@@ -17,52 +18,69 @@ const Success = () => {
       return;
     }
 
-    let connection = null;
-    const handleData = (data) => {
-      const payload = data?.userData ? data.userData : data;
-      if (!payload) return;
-      const { colorCode, code } = payload;
+    // Handler for incoming user data
+    const handleUserData = (userData) => {
+      console.log('>>> GetUserStatus handler HIT <<<', userData);
+      if (!userData) {
+        console.log('No data found (userData was null/undefined)');
+        return;
+      }
+      const { colorCode, code } = userData;
       if (colorCode) setColor(colorCode);
       if (code) setCode(code);
       setLoading(false);
     };
 
-    const startConnection = async () => {
+    // Build the SignalR connection ONCE, register handlers ONCE
+    const connection = new signalR.HubConnectionBuilder()
+      .withUrl(`https://prototype.runasp.net/api/userData?phone=${phone}`)
+      .configureLogging(signalR.LogLevel.Information)
+      .withAutomaticReconnect()
+      .build();
+
+    connectionRef.current = connection;
+
+    // Register ALL handlers ONCE, outside of start()
+    connection.on('GetUserStatus', handleUserData);
+    connection.on('UserDataUpdated', handleUserData);
+    connection.on('UserVerified', handleUserData);
+    connection.on('ReceiveUserData', handleUserData);
+
+    // Define the async start function for connecting/reconnecting
+    const start = async () => {
       try {
-        connection = new signalR.HubConnectionBuilder()
-          .withUrl(`https://prototype.runasp.net/api/userData?phone=${phone}`)
-          .withAutomaticReconnect()
-          .build();
-
-        // Listen for several possible event names (server may use different names)
-        connection.on('UserDataUpdated', handleData);
-        connection.on('UserVerified', handleData);
-        connection.on('ReceiveUserData', handleData);
-        connection.on('userData', handleData);
-        connection.on('message', handleData);
-
         await connection.start();
+        console.log('SignalR Connected.');
       } catch (err) {
-        console.error('SignalR connection failed:', err);
-        setLoading(false);
+        console.error('SignalR Connection Error:', err.toString());
+        // Reconnect after 5 seconds
+        setTimeout(start, 5000);
       }
     };
 
-    // start SignalR and also attempt an initial GET as a fallback
-    startConnection();
+    // Handle auto-reconnection on close
+    connection.onclose(async () => {
+      console.log('Connection closed. Attempting to restart...');
+      setTimeout(start, 5000);
+    });
 
+    // Start the connection for the first time
+    start();
+
+    // Try initial GET as fallback
     axios
       .get('https://prototype.runasp.net/api/userData', { params: { phone } })
       .then((response) => {
-        if (response.data) handleData(response.data);
+        if (response.data) handleUserData(response.data);
       })
       .catch((err) => {
-        // ignore, SignalR will handle realtime updates
+        console.log('Initial GET failed, waiting for SignalR...', err.message);
       });
 
+    // Cleanup on unmount
     return () => {
-      if (connection) {
-        connection.stop().catch(() => {});
+      if (connectionRef.current) {
+        connectionRef.current.stop().catch(() => {});
       }
     };
   }, [phone]);
