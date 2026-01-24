@@ -2,8 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import * as signalR from '@microsoft/signalr';
 import { useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const Success = () => {
+  const navigate = useNavigate();
   const [color, setColor] = useState({ r: 0, g: 0, b: 0 });
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(true);
@@ -15,7 +17,20 @@ const Success = () => {
 useEffect(() => {
   const handleUserData = (userData) => {
     console.log('>>> SIGNALR DATA RECEIVED <<<', userData);
-
+/**
+ * Handles the received user data from the SignalR hub.
+ * Logs the received data and updates the component state
+ * with the received color code and code.
+ * If the received data is null or undefined, it does nothing.
+ * If the received data contains a color code, it updates the component
+ * state with the new color code.
+ * If the received data contains a code, it updates the component
+ * state with the new code.
+ * Finally, it stops loading the component ONLY when real data arrives.
+ * @param {object} userData The received user data from the SignalR hub.
+ */
+/*************  ✨ Windsurf Command ⭐  *************/
+/*******  0e14d1b1-ff2c-4963-92e5-979cde252b4c  *******/
     if (!userData) return;
 
     if (userData.colorCode) setColor(userData.colorCode);
@@ -104,6 +119,24 @@ useEffect(() => {
           color: #28a745;
           margin-bottom: 20px;
         }
+          .modern-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: #fff;
+  border: none;
+  padding: 12px 32px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border-radius: 30px;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 20px rgba(40, 167, 69, 0.35);
+}
+
+.modern-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(40, 167, 69, 0.45);
+  background: linear-gradient(135deg, #20c997, #28a745);
+}
+
       `}</style>
 
       <div className="custom-card p-5 animate__animated animate__fadeInUp text-center" style={{ maxWidth: '450px', width: '100%' }}>
@@ -136,6 +169,13 @@ useEffect(() => {
             <p className="text-muted" style={{ fontSize: '1.1rem' }}>
               تم التحقق من رقم الجوال بنجاح
             </p>
+            <button
+  onClick={() => navigate('/')}
+  className="btn modern-btn mt-4"
+>
+  العودة إلى الصفحة الرئيسية
+</button>
+
           </>
         )}
       </div>
