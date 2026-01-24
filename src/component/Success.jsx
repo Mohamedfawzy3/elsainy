@@ -29,8 +29,6 @@ useEffect(() => {
  * Finally, it stops loading the component ONLY when real data arrives.
  * @param {object} userData The received user data from the SignalR hub.
  */
-/*************  ✨ Windsurf Command ⭐  *************/
-/*******  0e14d1b1-ff2c-4963-92e5-979cde252b4c  *******/
     if (!userData) return;
 
     if (userData.colorCode) setColor(userData.colorCode);
